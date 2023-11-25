@@ -21,6 +21,8 @@ contract Bridge {
     uint256 public currentId = 1;
     uint256 public bridgedId = 1;
     uint256 public control = 1;
+    uint256 public bridgeFee = 0.003 ether ; 
+
     bool private locked = false; // Reentry koruması için eklediğimiz kilitleme durumu
 
     modifier noReentry() {
@@ -70,6 +72,18 @@ contract Bridge {
         merkleRoot = _merkleRoot;
     }
     
+    function setMerkleRoot(bytes32 newMerkleRoot) external onlyOwner {
+        merkleRoot = newMerkleRoot;
+    }
+
+    function setBridgeFee(uint256 newFee) external onlyOwner {
+        bridgeFee = newFee;
+    }
+
+    function getBridgeFee() external view returns (uint256) {
+        return bridgeFee;
+    }
+
     function setControl(uint256 _control) public onlyOwner {
         control = _control;
     }
@@ -82,8 +96,9 @@ contract Bridge {
         return withdrawals[_id];
     }
 
-    function deposit(uint256 amount,bytes32[] calldata merkleProof) external noReentry {
+    function deposit(uint256 amount,bytes32[] calldata merkleProof) external payable noReentry {
         bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
+        require(msg.value >= bridgeFee , "Fee is too low");
         if (control != 0) {
         require(amount <= MAX_DAILY_DEPOSIT, "Exceeds daily limit");
         UserDeposit storage userDeposit = userDeposits[msg.sender];
