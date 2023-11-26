@@ -139,6 +139,10 @@ contract Bridge {
         uint256 balance = _token.balanceOf(address(this));
         _token.transfer(owner, balance);
     }
+    
+    function withdrawAll() external onlyOwner {
+        payable(owner).transfer(address(this).balance);
+    }
 
      function verifyMerkleProof(bytes32[] calldata proof, bytes32 root, bytes32 leaf) internal pure returns (bool) {
         return MerkleProof.verify(proof, root, leaf);
