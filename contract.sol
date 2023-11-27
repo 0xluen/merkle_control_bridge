@@ -89,7 +89,7 @@ contract Bridge {
     }
 
     function setDeposit(uint256 _deposit) public onlyOwner {
-        dailyDeposit = _deposit;
+        dailyDeposit = _deposit * 10**18 ;
     }
     
     function getDeposit(uint256 _id) public view returns (Deposit memory) {
