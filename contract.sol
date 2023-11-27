@@ -51,7 +51,7 @@ contract Bridge {
 
     mapping(address => UserDeposit) private userDeposits;
 
-    uint256 public constant MAX_DAILY_DEPOSIT = 1000 * 10**18; // 1000 token, 18 ondalık basamak varsayılarak
+    uint256 public dailyDeposit = 1000 * 10**18; // 1000 token, 18 ondalık basamak varsayılarak
     uint256 public constant DEPOSIT_INTERVAL = 24 hours;
 
     mapping(uint256 => Deposit) public deposits;
@@ -88,6 +88,10 @@ contract Bridge {
         control = _control;
     }
 
+    function setDeposit(uint256 _deposit) public onlyOwner {
+        dailyDeposit = _deposit;
+    }
+    
     function getDeposit(uint256 _id) public view returns (Deposit memory) {
         return deposits[_id];
     }
@@ -100,13 +104,13 @@ contract Bridge {
         bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
         require(msg.value >= bridgeFee , "Fee is too low");
         if (control != 0) {
-        require(amount <= MAX_DAILY_DEPOSIT, "Exceeds daily limit");
+        require(amount <= dailyDeposit, "Exceeds daily limit");
         UserDeposit storage userDeposit = userDeposits[msg.sender];
         uint256 timeSinceLastDeposit = block.timestamp - userDeposit.lastDepositTime;
         if (timeSinceLastDeposit >= DEPOSIT_INTERVAL) {
             userDeposit.dailyTotal = 0;
         }
-        require(userDeposit.dailyTotal + amount <= MAX_DAILY_DEPOSIT, "Daily limit exceeded");
+        require(userDeposit.dailyTotal + amount <= dailyDeposit, "Daily limit exceeded");
         userDeposit.dailyTotal += amount;
         userDeposit.lastDepositTime = block.timestamp;
         require(verifyMerkleProof(merkleProof, merkleRoot, leaf), "Invalid proof");
